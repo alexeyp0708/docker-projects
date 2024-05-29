@@ -1,0 +1,13 @@
+server {
+    listen       80;
+    listen  [::]:80;
+    server_name  localhost;
+    # Mandatory status return 200 for HEALTHCHECK
+    location / {
+        default_type text/plain;
+        return 200  'Success';
+    }
+}
+
+
+

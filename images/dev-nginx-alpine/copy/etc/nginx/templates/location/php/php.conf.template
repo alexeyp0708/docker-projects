@@ -1,0 +1,32 @@
+
+    location / {
+        set $php_script_path $document_root/index.php;
+        return 418;
+    }
+#~\.(htm|html|xml|js|css|map|json|yaml|yml|doc|docx|pdf|csv|xls|xlsx|avi|jpg|jpeg|png|ico|gif|mp3|mpg|mpeg|gif|txt)$
+
+    location  "~\.(?!php)(\w{1,10})$" {
+        set $php_script_path $source_dir/_to_static.php;
+        return 418;
+    }
+    
+    location @php {
+        include fastcgi_params;
+        fastcgi_param  SERVER_NAME $domain;
+        # $cdn - alias for upstream servers
+        fastcgi_pass $cdn;
+        fastcgi_param  SCRIPT_FILENAME $php_script_path;
+    }
+
+    location ~\.php$ {
+        set $php_script_path $document_root$fastcgi_script_name;
+        return 418;
+    }
+
+#    #denied static content
+#    location  "~\.(?!php)[\w]{1,10}$" {
+#       root $source_dir;
+#       return 403 'Invalid file extension';
+#    }
+
+    

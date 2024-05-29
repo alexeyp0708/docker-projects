@@ -1,0 +1,24 @@
+server {
+    listen 80;
+    #listen 443 default_server ssl;
+    ## cdn - container domain name
+    server_name ~^(?<domain>.+)\.(?<cdn>php.+$);
+    #ssl_certificate /etc/ssl/for_dev_web_server/general.crt;
+    #ssl_certificate_key /etc/ssl/for_dev_web_server/keys/general.key;
+    
+    #set $srv_name $cdn;
+    #if ($srv_name ~ "^php.*") {
+    #    set $srv_name php;
+    #}
+    set $srv_name php;
+    set $source_dir $work_dir/$srv_name/www;
+    error_page 418 = @$srv_name;
+    
+    root $source_dir/$domain;
+    
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+    include /etc/nginx/location/php/*.conf;
+}

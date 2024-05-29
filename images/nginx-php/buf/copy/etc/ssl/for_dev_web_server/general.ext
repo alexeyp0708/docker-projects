@@ -1,0 +1,13 @@
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+[alt_names]
+IP.1=172.19.32.2
+IP.2=172.19.32.3
+DNS.1=phpinfo.php74
+DNS.2=phpinfo.php82
+DNS.3=phpinfo.php83
+DNS.4=phpmyadmin.php83
+DNS.5=adminer.php83
+DNS.6=nodejs

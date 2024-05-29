@@ -1,0 +1,34 @@
+FROM php:8.3-fpm-alpine
+
+ENV DC_WORK_DIR=/mnt/data/\$HOSTNAME
+
+RUN <<EOF
+apk add  build-base linux-headers php83-dev bzip2 bzip2-dev libpng libpng-dev freetype-dev libjpeg-turbo-dev imap-dev icu-dev \
+ldb-dev libldap openldap-dev libxml2-dev libxslt-dev libpq-dev net-snmp-dev libzip-dev \
+rabbitmq-c-dev yaml-dev
+#glib
+EOF
+
+RUN <<EOF
+yes ''|pecl install ds
+yes ''|pecl install mongodb
+yes ''|pecl install redis
+yes ''|pecl install amqp
+yes ''|pecl install yaml
+yes ''|pecl install xdebug
+
+#https://www.php.net/manual/en/mongodb.installation.pecl.php ./configure --help
+#pecl install --configureoptions='--enable-mongodb-developer-flags="yes" --enable-mongodb-coverage="yes"' mongodb
+
+docker-php-ext-enable ds mongodb redis amqp yaml xdebug
+EOF
+
+RUN <<EOF
+docker-php-ext-install bz2 gd imap intl ldap mysqli simplexml xsl pgsql snmp soap zip
+EOF
+
+RUN <<EOF
+apk del build-base
+EOF
+
+COPY ./copy /

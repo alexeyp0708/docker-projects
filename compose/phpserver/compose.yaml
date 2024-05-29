@@ -1,0 +1,93 @@
+services:
+  nginx:
+    image: alexeyp0708/dev-nginx-alpine
+    container_name: nginx
+    restart: always
+    healthcheck:
+      test: ["CMD","/docker_scripts/healthcheck/test.sh"]
+      interval: 10m
+      start_interval: 3s
+      start_period: 1m
+    depends_on:
+      php83:
+        restart: true
+        condition: service_healthy
+    environment:
+        HOSTNAME: nginx
+    networks: 
+      default:
+      vlan_network: 
+        ipv4_address: ${NGINX_IPV4}
+    volumes:
+      - dev:/mnt/data
+  php83:
+    image: alexeyp0708/dev-php83-alpine
+    container_name: php83
+    restart: always
+    healthcheck:
+      test: ["CMD","/docker_scripts/healthcheck/test.sh","php-fpm","9000"]
+      interval: 10m
+      start_interval: 3s
+      start_period: 1m
+    depends_on:
+      mysql:
+        restart: true
+        condition: service_healthy
+    environment:
+      HOSTNAME: php83
+    networks:
+      - default
+    volumes:
+      - dev:/mnt/data
+  mysql:
+    image: alexeyp0708/dev-mysql
+    container_name: mysql
+    restart: always
+    healthcheck:
+      test: ["CMD","/docker_scripts/healthcheck/test.sh", "mysqld","3306"]
+      interval: 10m
+      start_interval: 3s
+      start_period: 1m
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      HOSTNAME: mysql
+      STDOUT_LOG_ERROR: YES
+    #command: --default-authentication-plugin=mysql_native_password      
+    networks:
+      - default
+    volumes:
+      - dev:/mnt/data
+      - type: tmpfs
+        target: /var/lib/mysql
+  ftp:
+    image: alexeyp0708/dev-vsftpd:latest
+    container_name: ftp
+    restart: always
+    depends_on:
+      nginx:
+        restart: true
+        condition: service_healthy
+    environment:
+      HOSTNAME: FTP  
+      USERS_LIST: >
+        www-data "www-data" /mnt/data www-data
+      VSFTPD_CONFIG: >
+        background=YES\n
+        local_root=/mnt/data/FTP/$$USER\n
+        guest_enable=YES\n
+        pam_service_name=vsftpd_virtual\n
+        virtual_use_local_privs=YES
+    command: -c /etc/vsftpd/collection/basic.conf
+    volumes:
+      - dev:/mnt/data
+    networks:
+      vlan_network: 
+        ipv4_address: ${FTP_IPV4}      
+networks:
+  default:
+    driver: bridge
+  vlan_network:
+    name: "${NETWORK_ID}"
+    external: true
+volumes:
+  dev:
