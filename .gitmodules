@@ -1,0 +1,3 @@
+[submodule "images/dev-vsftpd-alpine"]
+	path = images/dev-vsftpd-alpine
+	url = https://github.com/alexeyp0708/docker-dev-vsftpd-alpine.git
