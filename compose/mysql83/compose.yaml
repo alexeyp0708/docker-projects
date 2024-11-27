@@ -1,0 +1,33 @@
+services:
+  mysql:
+    image: alexeyp0708/dev-mysql
+    container_name: mysql
+    restart: always
+    healthcheck:
+      test: ["CMD","/docker_scripts/healthcheck/test.sh", "mysqld","3306"]
+      interval: 10m
+      start_interval: 3s
+      start_period: 1m
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      HOSTNAME: mysql
+      STDOUT_LOG_ERROR: YES
+    #command: --default-authentication-plugin=mysql_native_password      
+    networks: 
+      default:
+#      vlan_network: 
+#        ipv4_address: ${MYSQL83_IPV4}
+    volumes:
+      - dev:/mnt/data
+      - type: tmpfs
+        target: /var/lib/mysql
+networks:
+  default:
+    driver: bridge
+  vlan_network:
+    name: "${NETWORK_ID}"
+    external: true
+volumes:
+  dev:
+    external: true
+    name: webserver-data

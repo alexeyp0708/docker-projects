@@ -9,13 +9,13 @@ services:
       interval: 10m
       start_interval: 3s
       start_period: 1m
-    depends_on:
-      php83:
-        restart: true
-        condition: service_healthy
+#    depends_on:
+#      php83:
+#        restart: true
+#        condition: service_healthy
     environment:
         HOSTNAME: nginx
-        UPSTREAM_LIST: php83:9000
+        UPSTREAM_LIST: ${NGINX_UPSTREAM_LIST}
     networks: 
       default:
       vlan_network: 
@@ -23,6 +23,7 @@ services:
     volumes:
       - dev:/mnt/data
   php83:
+    build: ../../images/dev-php83-alpine
     image: alexeyp0708/dev-php83-alpine
     container_name: php83
     restart: always
@@ -31,10 +32,10 @@ services:
       interval: 10m
       start_interval: 3s
       start_period: 1m
-    depends_on:
-      mysql:
-        restart: true
-        condition: service_healthy
+#    depends_on:
+#      mysql:
+#        restart: true
+#        condition: service_healthy
     environment:
       HOSTNAME: php83
     networks:
@@ -61,6 +62,32 @@ services:
       - dev:/mnt/data
       - type: tmpfs
         target: /var/lib/mysql
+  nodejs:
+    image: alexeyp0708/dev-nodejs
+    build: ../../images/dev-nodejs-alpine
+    container_name: nodejs
+    stdin_open: true
+    tty: true
+    networks:
+      default: 
+      vlan_network: 
+        ipv4_address: ${NODEJS_IPV4}
+    volumes:
+      - dev:/mnt/data
+  openssh:
+    image: alexeyp0708/dev-openssh
+    build: ../../images/dev-openssh-alpine
+    container_name: openssh
+    restart: always
+    environment:
+        USERS_LIST: >
+          -u www-data -i 82 -p 1234 -g www-data -d /mnt/data -m 777 -s /bin/sh
+    networks:
+      default: 
+      vlan_network: 
+        ipv4_address: ${OPENSSH_IPV4}
+    volumes:
+      - dev:/mnt/data
   ftp:
     image: alexeyp0708/dev-vsftpd:latest
     container_name: ftp
@@ -70,7 +97,7 @@ services:
         restart: true
         condition: service_healthy
     environment:
-      HOSTNAME: FTP  
+      HOSTNAME: FTP
       USERS_LIST: >
         www-data "www-data" /mnt/data www-data
       VSFTPD_CONFIG: >
@@ -84,7 +111,7 @@ services:
       - dev:/mnt/data
     networks:
       vlan_network: 
-        ipv4_address: ${FTP_IPV4}      
+        ipv4_address: ${FTP_IPV4}
 networks:
   default:
     driver: bridge

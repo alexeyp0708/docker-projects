@@ -3,6 +3,7 @@ script_path=$(dirname $(readlink -f "$0"))
 chown www-data $DC_WORK_DIR
 UPSTREAM_LIST="$(echo -e "$UPSTREAM_LIST")"
 addUpstream(){
+    echo $1 
     local host="$(echo $1|cut -d ':' -f 1)"
     local port="$(echo $1|cut -d ':' -f 2)"
     
@@ -18,11 +19,27 @@ EOF
     #fi
 }
 
-setUpstreamList(){
-   echo -e "$@"|while read -r host_port
+_deprecated_setUpstreamList(){
+    echo -n "" > /etc/nginx/templates/upstream/upstream.conf.template
+    echo -e "$@"|while read -r host_port
     do
-      addUpstream $host_port
+        if [[ ! -z "$host_port" ]]
+        then
+          addUpstream $host_port
+        fi
     done 
+}
+
+setUpstreamList(){
+    echo -n "" > /etc/nginx/templates/upstream/upstream.conf.template
+    local IFS=';'
+    for host_port in $@
+    do
+        if [[ ! -z "$host_port" ]]
+        then
+            addUpstream $host_port
+        fi
+    done
 }
 
 setServersConfig(){

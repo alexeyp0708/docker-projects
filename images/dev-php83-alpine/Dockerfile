@@ -10,22 +10,27 @@ ENV DC_WORK_DIR=/mnt/data/php
 COPY ./copy /
 
 # installing 7 - phpmyadmin,adminer
+# Note:When creating an image, a buffer of applicationss is created, which, when the container starts, is copied to the mounted volume
 RUN <<EOF
-
 composer create-project phpmyadmin/phpmyadmin "/.buf/www/phpmyadmin"
-cp /.buf/.www/phpmyadmin/* /.buf/www/phpmyadmin
+EOF
+RUN <<EOF
 composer create-project vrana/adminer "/.buf/www/adminer"
-cp /.buf/.www/adminer/* /.buf/www/adminer
-rm -r /.buf/.www
 EOF
 
+RUN cp -rf /.buf/.www/* /.buf/www
 RUN <<EOF
 mkdir -p /entrypoint
 cat <<EOF2 >/entrypoint/init.sh
 #!/bin/sh
 
 mkdir -p "\${DC_WORK_DIR}/www"
-
+if [[ ! -d "\${DC_WORK_DIR}/www/phpinfo/" ]]
+then
+ mv "/.buf/www/phpinfo" "\${DC_WORK_DIR}/www/phpinfo"
+ mv "/.buf/www/_to_static.php" "\${DC_WORK_DIR}/www"
+fi
+mv "/.buf/www/phpinfo" "\${DC_WORK_DIR}/www/phpinfo"
 if [[ ! -d "\${DC_WORK_DIR}/www/phpmyadmin/" ]]
 then
     mv "/.buf/www/phpmyadmin" "\${DC_WORK_DIR}/www/phpmyadmin"
@@ -37,7 +42,7 @@ then
 fi
 rm -r "/.buf/"
 chown -R www-data:www-data "\${DC_WORK_DIR}"
-chmod -R 775 "\${DC_WORK_DIR}"
+#chmod -R 775 "\${DC_WORK_DIR}"
 exec php-fpm $@
 EOF2
 chmod 755 /entrypoint/init.sh
